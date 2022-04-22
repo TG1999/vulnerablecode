@@ -88,6 +88,20 @@ class VulnerabilitySerializer(serializers.HyperlinkedModelSerializer):
         fields = "__all__"
 
 
+class VulnerabilitySerializer(serializers.HyperlinkedModelSerializer):
+
+    resolved_packages = MinimalPackageSerializer(many=True, source="resolved_to", read_only=True)
+    unresolved_packages = MinimalPackageSerializer(
+        many=True, source="vulnerable_to", read_only=True
+    )
+
+    references = VulnerabilityReferenceSerializer(many=True, source="vulnerabilityreference_set")
+
+    class Meta:
+        model = Vulnerability
+        fields = "__all__"
+
+
 class PackageSerializer(serializers.HyperlinkedModelSerializer):
 
     unresolved_vulnerabilities = MinimalVulnerabilitySerializer(
@@ -101,7 +115,6 @@ class PackageSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Package
         exclude = ["vulnerabilities"]
-
 
 class PackageFilterSet(filters.FilterSet):
     purl = filters.CharFilter(method="filter_purl")
@@ -177,3 +190,38 @@ class VulnerabilityViewSet(viewsets.ReadOnlyModelViewSet):
     paginate_by = 50
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = VulnerabilityFilterSet
+
+
+class VulnerabilityReferenceFilterSet(filters.FilterSet):
+    class Meta:
+        model = VulnerabilityReference
+        fields = ["reference_id"]
+
+
+class CPEFilterSet(filters.FilterSet):
+    cpe = filters.CharFilter(method="filter_cpe")
+
+    class Meta:
+        model = VulnerabilityReference
+        fields = ["reference_id"]
+
+    def filter_cpe(self, queryset, name, value):
+        cpe = unquote(value)
+        return self.queryset.filter(reference_id=cpe)
+
+
+class CPESerializer(serializers.HyperlinkedModelSerializer):
+
+    vulnerability = MinimalVulnerabilitySerializer(read_only=True) 
+
+    class Meta:
+        model = VulnerabilityReference
+        fields = ["vulnerability"]
+
+
+class CPEViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = VulnerabilityReference.objects.filter(reference_id__startswith="cpe")
+    serializer_class = CPESerializer
+    paginate_by = 50
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = CPEFilterSet

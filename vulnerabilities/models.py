@@ -109,6 +109,7 @@ class VulnerabilityReference(models.Model):
     def severities(self):
         return VulnerabilitySeverity.objects.filter(reference=self.id)
 
+
     class Meta:
         unique_together = (
             "vulnerability",
