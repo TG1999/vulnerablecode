@@ -27,7 +27,7 @@ IMPORTERS_REGISTRY = [
     redhat.RedhatImporter,
     pysec.PyPIImporter,
     debian.DebianImporter,
-    gitlab.GitLabAPIImporter,
+    gitlab.GitLabGitImporter,
     pypa.PyPaImporter,
 ]
 
