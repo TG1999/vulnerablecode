@@ -71,7 +71,7 @@ def fork_and_get_dir(url):
     return fetch_via_vcs(url).dest_dir
 
 
-class GitLabGitImporter(GitImporter):
+class GitLabAPIImporter(GitImporter):
     spdx_license_expression = "MIT"
     license_url = "https://gitlab.com/gitlab-org/advisories-community/-/blob/main/LICENSE"
 
@@ -277,7 +277,7 @@ class GitLabBasicImprover(Improver):
 
     @property
     def interesting_advisories(self) -> QuerySet:
-        return Advisory.objects.filter(created_by=GitLabGitImporter.qualified_name)
+        return Advisory.objects.filter(created_by=GitLabAPIImporter.qualified_name)
 
     def get_package_versions(
         self, package_url: PackageURL, until: Optional[datetime] = None
