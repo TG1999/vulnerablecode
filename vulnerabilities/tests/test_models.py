@@ -11,6 +11,7 @@ from datetime import datetime
 from unittest import TestCase
 
 import pytest
+from django.core.paginator import Paginator
 from django.db.utils import IntegrityError
 from freezegun import freeze_time
 
@@ -96,8 +97,42 @@ class TestPackageRelatedVulnerablity(TestCase):
         assert w1.description is ""
 
     def test_paginated(self):
-        for idx in range(1010):
-            adv = models.Advisory(summary=str(idx))
+        for idx in range(113):
+            adv = models.Advisory(summary=str(idx), date_collected=datetime.now())
             adv.save()
-        advs = list(models.Advisory.objects.all().paginated(per_page=100))
-        assert len(advs) == 1010
+        advs_vcio = list(paginated_vcio(self=models.Advisory.objects.all(), per_page=10))
+        assert len(advs_vcio) == 113
+        advs_scio = []
+        for page in  paginated_scio(self=models.Advisory.objects.all(), per_page=10):
+            advs_scio.extend(page)
+        assert len(advs_scio) == 113
+
+
+def paginated_vcio(self, per_page=100):
+    """
+    Iterate over a (large) QuerySet by chunks of ``per_page`` items.
+    This technique is essential for preventing memory issues when iterating
+    See these links for inspiration:
+    https://nextlinklabs.com/resources/insights/django-big-data-iteration
+    https://stackoverflow.com/questions/4222176/why-is-iterating-through-a-large-django-queryset-consuming-massive-amounts-of-me/
+    """
+    paginator = Paginator(self, per_page=per_page)
+    for page_number in paginator.page_range:
+        page = paginator.page(page_number)
+        for object in page.object_list:
+            yield object
+
+
+def paginated_scio(self, per_page=100):
+    """
+    Iterate over a (large) QuerySet by chunks of ``per_page`` items.
+
+    This is done to prevent high memory usage when using a regular QuerySet
+    or QuerySet.iterator to iterate over a large number of
+    CodebaseResources:
+
+    https://nextlinklabs.com/resources/insights/django-big-data-iteration
+    https://stackoverflow.com/questions/4222176/why-is-iterating-through-a-large-django-queryset-consuming-massive-amounts-of-me/
+    """
+    for page in Paginator(self, per_page=per_page):
+        yield page.object_list
