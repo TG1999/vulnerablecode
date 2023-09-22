@@ -94,3 +94,10 @@ class TestPackageRelatedVulnerablity(TestCase):
         assert w1.weakness is None
         assert w1.name is ""
         assert w1.description is ""
+
+    def test_paginated(self):
+        for idx in range(1010):
+            adv = models.Advisory(summary=str(idx))
+            adv.save()
+        advs = list(models.Advisory.objects.all().paginated(per_page=100))
+        assert len(advs) == 1010
