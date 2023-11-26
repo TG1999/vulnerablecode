@@ -795,14 +795,14 @@ class Package(PackageURLMixin):
     @property
     def fixing_vulnerabilities(self):
         """
-        Return only packages fixing a vulnerability .
+        Return vulnerabilities fixed by the package.
         """
         return self.vulnerabilities.all().filter(packagerelatedvulnerability__fix=True)
 
     @property
     def affecting_vulnerabilities(self):
         """
-        Return only packages fixing a vulnerability .
+        Return vulnerabilities affecting the package.
         """
         return self.vulnerabilities.all().filter(packagerelatedvulnerability__fix=False)
 
